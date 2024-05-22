@@ -1,0 +1,143 @@
+#include <iostream>
+#include <iomanip>
+#include <limits> // Thêm thu vi?n này d? s? d?ng numeric_limits
+
+using namespace std;
+bool checkthue(float n, int m){
+	float t   = n - 11000000-m*4400000;
+	if(t<=0)return false;
+	else return true;
+}
+struct TaxBracket {
+    double lower_limit;
+    double upper_limit;
+    double rate;
+};
+
+double calculate_tax(double income, int dependents, double &taxable_income, double tax_details[7]) {
+    // Các thông s? co b?n
+    const double personal_deduction = 11000000; // Gi?m tr? b?n thân
+    const double dependent_deduction = 4400000; // Gi?m tr? m?i ngu?i ph? thu?c
+    
+    // Tính thu nh?p ch?u thu?
+    taxable_income = income - personal_deduction - (dependents * dependent_deduction);
+    
+    // N?u thu nh?p ch?u thu? nh? hon ho?c b?ng 0, không ph?i dóng thu?
+    if (taxable_income <= 0) {
+        taxable_income = 0;
+        return 0;
+    }
+    
+    // Các b?c thu? theo lu?t hi?n hành
+    TaxBracket tax_brackets[] = {
+        {0, 5000000, 0.05},     // 5% cho ph?n thu nh?p d?n 5 tri?u
+        {5000000, 10000000, 0.1},   // 10% cho ph?n thu nh?p t? 5 tri?u d?n 10 tri?u
+        {10000000, 18000000, 0.15},  // 15% cho ph?n thu nh?p t? 10 tri?u d?n 18 tri?u
+        {18000000, 32000000, 0.2},  // 20% cho ph?n thu nh?p t? 18 tri?u d?n 32 tri?u
+        {32000000, 52000000, 0.25}, // 25% cho ph?n thu nh?p t? 32 tri?u d?n 52 tri?u
+        {52000000, 80000000, 0.3},  // 30% cho ph?n thu nh?p t? 52 tri?u d?n 80 tri?u
+        {80000000, numeric_limits<double>::infinity(), 0.35} // 35% cho ph?n thu nh?p trên 80 tri?u
+    };
+
+    // Tính thu?
+    double tax = 0;
+    double remaining_income = taxable_income;
+    for (int i = 0; i < 7; ++i) {
+        if (remaining_income > 0) {
+            double taxable_part = min(remaining_income, tax_brackets[i].upper_limit - tax_brackets[i].lower_limit);
+            double tax_amount = taxable_part * tax_brackets[i].rate;
+            tax_details[i] = tax_amount;
+            tax += tax_amount;
+            remaining_income -= taxable_part;
+        } else {
+            tax_details[i] = 0;
+        }
+    }
+
+    return tax;
+}
+
+void print_tax_details(double income, int dependents, double tax, double taxable_income, double tax_details[7]) {
+    cout << "HE THONG TINH THUE THU NHAP CA NHAN" << endl;
+    cout << "Chi can dien Tong thu nhap, ban se biet ngay muc thue TNCN phai nop" << endl;
+    cout << endl;
+    cout << "Tong thu nhap: " << fixed << setprecision(0) << income << endl;
+    cout << "So nguoi phu thuoc: " << dependents << endl;
+    cout << "Thue TNCN phai nop: " << tax << " VND" << endl;
+    cout << endl;
+    cout << "Dien giai cach tinh thue TNCN:" << endl;
+    cout << "Giam tru ban than = 11.000.000" << endl;
+    cout << "Giam tru nguoi phu thuoc = " << dependents << " x 4.400.000 = " << dependents * 4400000 << endl;
+    cout << "Thu nhap chiu thue = " << income << " - 11.000.000 - " << dependents * 4400000 << " = " << taxable_income << endl;
+    cout << endl;
+
+    TaxBracket tax_brackets[] = {
+        {0, 5000000, 0.05},     // 5% cho ph?n thu nh?p d?n 5 tri?u
+        {5000000, 10000000, 0.1},   // 10% cho ph?n thu nh?p t? 5 tri?u d?n 10 tri?u
+        {10000000, 18000000, 0.15},  // 15% cho ph?n thu nh?p t? 10 tri?u d?n 18 tri?u
+        {18000000, 32000000, 0.2},  // 20% cho ph?n thu nh?p t? 18 tri?u d?n 32 tri?u
+        {32000000, 52000000, 0.25}, // 25% cho ph?n thu nh?p t? 32 tri?u d?n 52 tri?u
+        {52000000, 80000000, 0.3},  // 30% cho ph?n thu nh?p t? 52 tri?u d?n 80 tri?u
+        {80000000, numeric_limits<double>::infinity(), 0.35} // 35% cho ph?n thu nh?p trên 80 tri?u
+    };
+
+    double remaining_income = taxable_income;
+    int j = 0;
+    for (int i = 0; i < 7; ++i) {
+        if (remaining_income > 0) {
+            double taxable_part = min(remaining_income, tax_brackets[i].upper_limit - tax_brackets[i].lower_limit);
+            double tax_amount = taxable_part * tax_brackets[i].rate;
+            cout << "+ Bac " << i + 1 << ": Thu nhap tinh thue ";
+            j++;
+            if (i == 0) {
+                cout << "den " << tax_brackets[i].upper_limit << " dong, thue suat " << tax_brackets[i].rate * 100 << "%:" << endl;
+                cout << fixed << setprecision(0) << taxable_part << " × " << tax_brackets[i].rate * 100 << "% = " << tax_amount << endl;
+            } else {
+                cout << "tu " << tax_brackets[i].lower_limit << " dong den " << tax_brackets[i].upper_limit << " dong, thue suat " << tax_brackets[i].rate * 100 << "%:" << endl;
+                cout << fixed << setprecision(0) << taxable_part << " × " << tax_brackets[i].rate * 100 << "% = " << tax_amount << endl;
+            }
+            remaining_income -= taxable_part;
+        }
+        
+    }
+
+    cout << endl << "Thue thu nhap ca nhan = ";
+    for (int i = 0; i < j; ++i) {
+        if (i > 0) cout << " + ";
+        cout << fixed << setprecision(0) << tax_details[i];
+    }
+    cout << " = " << tax << endl;
+}
+
+int main() {
+    double income;
+    int dependents;
+
+    cout << "Nhap tong thu nhap trong thang/tr(vi du nhap 1 = 1.000.000): ";
+    cin >> income;
+    cout << "Nhap so nguoi phu thuoc: ";
+    cin >> dependents;
+    if(income<0)cout<<"So tien thu nhap ca nhan phai >= 0"<<endl;
+    if(income>1000)cout<<"So tien thu nhap ca nhan phai <= 1000"<<endl;
+    if(dependents<0)cout<<"So nguoi phu thuoc phai >= 0"<<endl;
+    if(dependents>10)cout<<"So nguoi phu thuoc phai<= 10"<<endl;
+    if((income>=0&&income<=1000)&&(dependents>=0&&dependents<=10)){
+    	income*=1000000;
+    	if(checkthue(income, dependents)){
+	    
+        double taxable_income;
+        
+        double tax_details[7];
+        double tax = calculate_tax(income, dependents, taxable_income, tax_details);
+
+        print_tax_details(income, dependents, tax, taxable_income, tax_details);
+
+   
+	}else {
+	
+	      cout<<"Voi tong thu nhap ca nhan: "<<income<<"tr ban chua phai dong thue"<<endl;
+	      cout<<"Thue thu nhap ca nhan = 0";
+		  }
+	}
+}
+
